@@ -11,6 +11,7 @@
 namespace fs = std::filesystem;
 using namespace std;
 
+// Colors
 const string RED     = "\033[31m";
 const string GREEN   = "\033[32m";
 const string YELLOW  = "\033[33m";
@@ -20,42 +21,45 @@ const string RESET   = "\033[0m";
 const string BOLD    = "\033[1m";
 const string INV     = "\033[7m";
 
+// Localization
 struct Strings {
-    string lang_name;
-    string title_features;
-    string title_themes;
-    string title_plugins;
-    string title_install;
-    string hint_nav;
-    string backup_msg;
-    string plug_check;
-    string plug_installing;
-    string plug_wait;
-    string done_msg;
-    string run_vim_msg;
+    string lang_name, title_features, title_themes, title_plugins, title_install, hint_nav, backup_msg, plug_check, plug_installing, plug_wait, done_msg, run_vim_msg;
 };
 
 map<string, Strings> locales = {
     {"en", {
         "English", " Feature Configuration ", " Select Color Scheme ", " Select Plugins ", " Installation ",
         "Arrows: Navigate | Space: Toggle | Enter: Next", 
-        "[!] Old .vimrc backed up to .vimrc.backup", "[*] Checking plugin manager...",
+        "[!] Old .vimrc backed up to .backup", "[*] Checking plugin manager...",
         "[*] Installing plugins inside Vim...", "Please wait, this may take a minute...",
         "─── ALL DONE! ───", "Run 'vim' to start."
     }},
     {"ru", {
         "Русский", " Настройка функций ", " Выберите цветовую схему ", " Выберите плагины ", " Установка ",
         "Стрелки: Навигация | Пробел: Выбор | Enter: Далее",
-        "[!] Старый .vimrc сохранен в .vimrc.backup", "[*] Проверка менеджера плагинов...",
+        "[!] Старый .vimrc сохранен в .backup", "[*] Проверка менеджера плагинов...",
         "[*] Установка плагинов в Vim...", "Пожалуйста, подождите, это займет около минуты...",
         "─── ГОТОВО! ───", "Запустите 'vim' для начала работы."
     }}
 };
 
-struct Option { string label_en; string label_ru; string cmd; bool selected; string desc_en; string desc_ru; };
-struct Theme  { string name; string repo; string cmd; };
-struct Plugin { string name; string repo; string desc_en; string desc_ru; bool selected; };
+// Structure
+struct Option { 
+    string label_en, label_ru, cmd; 
+    bool selected; 
+    string desc_en, desc_ru; 
+};
 
+struct Theme { 
+    string name, repo, cmd; 
+};
+
+struct Plugin { 
+    string name, repo, desc_en, desc_ru; 
+    bool selected; 
+};
+
+// System func
 int getch() {
     struct termios oldt, newt;
     int ch;
@@ -85,27 +89,25 @@ public:
         home_dir = h ? string(h) : ".";
         
         opts = {
-            {"Line Numbers", "Номера строк", "set number", true, "Show line numbers", "Показывать номера строк"},
-            {"Relative Numbers", "Относительные номера", "set relativenumber", false, "Helpful for jumps", "Удобно для прыжков по коду"},
-            {"Mouse Support", "Поддержка мыши", "set mouse=a", true, "Enable scrolling/clicks", "Разрешить клики и скролл"},
-            {"System Clipboard", "Буфер обмена", "set clipboard=unnamedplus", true, "Sync with OS copy/paste", "Общий буфер с системой"},
-            {"Smart Indent", "Умные отступы", "set smartindent", true, "Auto indentation", "Автоматические отступы"},
-            {"Expand Tabs", "Пробелы вместо табов", "set expandtab\nset tabstop=4\nset shiftwidth=4", true, "4 spaces instead of Tab", "4 пробела вместо Tab"}
+            {"Native Copy/Paste", "Привычное Копирование", "clipboard_logic", true, "Ctrl+C/V for Laptop, Cmd+C/V for Mac", "Ctrl+C/V для ноутбуков, Cmd+C/V для Mac"},
+            {"Line Numbers", "Номера строк", "set number", true, "Show line numbers on the left", "Показывать номера строк слева"},
+            {"Mouse Support", "Поддержка мыши", "set mouse=a", true, "Allow scrolling and clicking", "Разрешить клики и скролл"},
+            {"Smart Indent", "Умные отступы", "set smartindent", true, "Auto-indent for code blocks", "Авто-отступы для кода"},
+            {"Auto-Tab (4 spaces)", "Авто-таб (4 пробела)", "set expandtab\nset tabstop=4\nset shiftwidth=4", true, "Use spaces instead of tabs", "Использовать пробелы вместо табуляции"}
         };
 
         themes = {
             {"Dracula (Dark)", "dracula/vim", "colorscheme dracula"},
             {"Gruvbox (Retro)", "morhetz/gruvbox", "colorscheme gruvbox"},
             {"Nord (Arctic)", "arcticicestudio/nord-vim", "colorscheme nord"},
-            {"OneDark (Atom)", "joshdick/onedark.vim", "colorscheme onedark"},
-            {"None (Default)", "", ""}
+            {"None", "", ""}
         };
 
         plugins = {
-            {"NERDTree", "preservim/nerdtree", "File explorer", "Проводник файлов (Ctrl+n)", true},
-            {"Vim-Airline", "vim-airline/vim-airline", "Status bar", "Красивая статус-строка", true},
-            {"Auto-Pairs", "jiangmiao/auto-pairs", "Auto close brackets", "Автозакрытие скобок", true},
-            {"Vim-Commentary", "tpope/vim-commentary", "Quick comments (gcc)", "Быстрое комментирование", false}
+            {"NERDTree", "preservim/nerdtree", "File explorer (Ctrl+n)", "Проводник файлов (Ctrl+n)", true},
+            {"Vim-Airline", "vim-airline/vim-airline", "Beautiful status bar", "Красивая статус-строка", true},
+            {"Auto-Pairs", "jiangmiao/auto-pairs", "Auto-close brackets", "Авто-закрытие скобок", true},
+            {"Vim-Commentary", "tpope/vim-commentary", "Quick comments (gcc)", "Быстрое комментирование", true}
         };
     }
 
@@ -121,16 +123,15 @@ public:
         while(true) {
             clear();
             cout << RED << "╭──────────────────────────╮" << endl;
-            cout << "│     Select Language      │" << endl;
+            cout << "│     Vim Config Wizard    │" << endl;
             cout << "╰──────────────────────────╯" << RESET << endl;
             for(int i=0; i<2; ++i) {
                 if(i == cursor) cout << YELLOW << "  ▸ " << INV << " " << locales[l_keys[i]].lang_name << " " << RESET << endl;
                 else cout << "    " << locales[l_keys[i]].lang_name << endl;
             }
             int c = getch();
-            if(c == 27) { getch(); switch(getch()) {
-                case 'A': cursor = 0; break; case 'B': cursor = 1; break;
-            }} else if(c == 10) { lang = l_keys[cursor]; s = locales[lang]; break; }
+            if(c == 27) { getch(); switch(getch()) { case 'A': cursor = 0; break; case 'B': cursor = 1; break; } }
+            else if(c == 10) { lang = l_keys[cursor]; s = locales[lang]; break; }
         }
     }
 
@@ -140,46 +141,45 @@ public:
         int cursor = 0;
         while(true) {
             clear(); draw_header(s.title_features);
-            for(int i=0; i<opts.size(); ++i) {
+            for(int i=0; i<(int)opts.size(); ++i) {
                 if(i == cursor) cout << YELLOW << "  ▸ " << INV; else cout << "    ";
                 cout << "[" << (opts[i].selected ? "X" : " ") << "] " << (lang=="ru"?opts[i].label_ru:opts[i].label_en) << RESET;
-                if(i == cursor) cout << BLUE << " ← " << (lang=="ru"?opts[i].desc_ru:opts[i].desc_en);
+                if(i == cursor) cout << BLUE << " ← " << (lang=="ru"?opts[i].desc_ru:opts[i].desc_en); // ВОТ ОПИСАНИЕ
                 cout << endl;
             }
             cout << "\n" << YELLOW << s.hint_nav << RESET;
             int c = getch();
-            if(c == 27) { getch(); switch(getch()) {
-                case 'A': if(cursor>0) cursor--; break; case 'B': if(cursor<opts.size()-1) cursor++; break;
-            }} else if(c == ' ') opts[cursor].selected = !opts[cursor].selected;
+            if(c == 27) { getch(); switch(getch()) { case 'A': if(cursor>0) cursor--; break; case 'B': if(cursor<(int)opts.size()-1) cursor++; break; } }
+            else if(c == ' ') opts[cursor].selected = !opts[cursor].selected;
             else if(c == 10) break;
         }
 
+        // Themes
         cursor = 0;
         while(true) {
             clear(); draw_header(s.title_themes);
-            for(int i=0; i<themes.size(); ++i) {
+            for(int i=0; i<(int)themes.size(); ++i) {
                 if(i == cursor) cout << YELLOW << "  ▸ " << INV << " " << themes[i].name << " " << RESET << endl;
                 else cout << "    " << themes[i].name << endl;
             }
             int c = getch();
-            if(c == 27) { getch(); switch(getch()) {
-                case 'A': if(cursor>0) cursor--; break; case 'B': if(cursor<themes.size()-1) cursor++; break;
-            }} else if(c == 10) { current_theme = cursor; break; }
+            if(c == 27) { getch(); switch(getch()) { case 'A': if(cursor>0) cursor--; break; case 'B': if(cursor<(int)themes.size()-1) cursor++; break; } }
+            else if(c == 10) { current_theme = cursor; break; }
         }
 
+        // Plugins
         cursor = 0;
         while(true) {
             clear(); draw_header(s.title_plugins);
-            for(int i=0; i<plugins.size(); ++i) {
+            for(int i=0; i<(int)plugins.size(); ++i) {
                 if(i == cursor) cout << YELLOW << "  ▸ " << INV; else cout << "    ";
                 cout << "[" << (plugins[i].selected ? "X" : " ") << "] " << plugins[i].name << RESET;
-                if(i == cursor) cout << BLUE << " ← " << (lang=="ru"?plugins[i].desc_ru:plugins[i].desc_en);
+                if(i == cursor) cout << BLUE << " ← " << (lang=="ru"?plugins[i].desc_ru:plugins[i].desc_en); // ВОТ ОПИСАНИЕ
                 cout << endl;
             }
             int c = getch();
-            if(c == 27) { getch(); switch(getch()) {
-                case 'A': if(cursor>0) cursor--; break; case 'B': if(cursor<plugins.size()-1) cursor++; break;
-            }} else if(c == ' ') plugins[cursor].selected = !plugins[cursor].selected;
+            if(c == 27) { getch(); switch(getch()) { case 'A': if(cursor>0) cursor--; break; case 'B': if(cursor<(int)plugins.size()-1) cursor++; break; } }
+            else if(c == ' ') plugins[cursor].selected = !plugins[cursor].selected;
             else if(c == 10) break;
         }
 
@@ -196,28 +196,42 @@ public:
         }
 
         ofstream v(v_path);
-        v << "\" Генерируемый конфиг\nset nocompatible\nsyntax on" << endl;
-        for(auto& o : opts) if(o.selected) v << o.cmd << endl;
+        v << "set nocompatible\nsyntax on" << endl;
+
+        bool native_clipboard = false;
+        for(auto& o : opts) {
+            if(o.cmd == "clipboard_logic" && o.selected) native_clipboard = true;
+            else if(o.selected) v << o.cmd << endl;
+        }
+
+        if(native_clipboard) {
+            v << "\n\" --- Copy/Paste Logic ---" << endl;
+            #ifdef __APPLE__
+                v << "set clipboard=unnamed" << endl;
+                v << "vnoremap <C-c> \"+y" << endl;
+            #else
+                v << "set clipboard=unnamedplus" << endl;
+                v << "vnoremap <C-c> \"+y" << endl;
+                v << "nnoremap <C-v> \"+p" << endl;
+                v << "inoremap <C-v> <C-r>+" << endl;
+                v << "vnoremap <C-v> \"+p" << endl;
+            #endif
+        }
 
         v << "\ncall plug#begin('~/.vim/plugged')" << endl;
         if(!themes[current_theme].repo.empty()) v << "Plug '" << themes[current_theme].repo << "'" << endl;
         for(auto& p : plugins) if(p.selected) v << "Plug '" << p.repo << "'" << endl;
         v << "call plug#end()" << endl;
 
-        if(!themes[current_theme].cmd.empty()) {
-            v << "\n\" Тема применяется без ошибок при первом запуске" << endl;
-            v << "silent! " << themes[current_theme].cmd << endl;
-        }
-        
+        if(!themes[current_theme].cmd.empty()) v << "silent! " << themes[current_theme].cmd << endl;
         if(plugins[0].selected) v << "map <C-n> :NERDTreeToggle<CR>" << endl;
+
         v.close();
 
         cout << GREEN << s.plug_check << RESET << endl;
         system("curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim > /dev/null 2>&1");
         
         cout << CYAN << s.plug_installing << RESET << endl;
-        cout << YELLOW << s.plug_wait << RESET << endl;
-        
         string quiet_cmd = "vim -i NONE -u " + v_path + " +PlugInstall +qall > /dev/null 2>&1";
         system(quiet_cmd.c_str());
 
