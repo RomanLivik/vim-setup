@@ -1,5 +1,8 @@
 # Vim Fast Configurator
-An interactive, high-performance terminal tool written in C++ to automate your Vim environment setup on macOS and Linux.
+An interactive, high-performance terminal tool written in C++ to automate your Vim environment setup on MacOS and Linux. 
+
+## Warning
+The script includes very small part of plugins. If you need to create fully yours Vim setup with very much plugins you can't use the script for this. The number of plugins in the script will increase over time.
 
 ## Prerequisites
 Before running the script, ensure you have the following installed:
